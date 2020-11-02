@@ -7,44 +7,60 @@ export const searchSlice = createSlice({
         result:{
                 google:{results:[]},
                 bing:{results:[]}
-            }
+            },
+        searchOption:"Google"
+
        
     },
     reducers:{
-        google: (state,action) =>{
-            const {payload} = action;
-
-            // uso immer para mutar el o bjeto 
-           // search.resoults.push({test:"test"})
+        
+        cleanSearch:  (state,action) =>{
+            state.result.google.results = []
+            state.result.bing.results = []
         },
 
         setGoogleResoults: (state,action) =>{
             const {payload} = action;
-            
-            console.log(payload)
-            
-            // uso immer para mutar el o bjeto 
-            //  search.resoults.push({test:payload})
+            state.result.google.results = payload.items
+ 
         },
         setBingResoults: (state,action) =>{
             const {payload} = action;
+            state.result.bing.results = payload.webPages.value
+         
+        },
+        setSearchOptions: (state,action) =>{
+            const {payload} = action;
+            
+            state.searchOption = payload.value
 
-            // uso immer para mutar el o bjeto 
-         //   state.resoults.push({test:"test"})
+
         }
     }
 });
 
-export const searchAsync = resoults => dispatch => {
-    setTimeout(() => {
-      dispatch(setGoogleResoults(resoults));
-    }, 1000);
-  };
-  
+export const searchGoogleAsync = term => dispatch => {
+    fetch("https://www.googleapis.com/customsearch/v1?q="+term+"&key=AIzaSyD8JCOQumDA9t68yimK55dk2MDdP_eKCfM&cx=030844d7242c850bc")
+    .then(response => response.json())
+    .then(data => {
+        dispatch(setGoogleResoults(data ))
+    });
+};
 
-export const {setGoogleResoults,google} = searchSlice.actions
+export const searchBingAsync = term => dispatch => {
+   const  options = {
+        headers: {
+            'Ocp-Apim-Subscription-Key': '74c468e0f1864839abe8e6a1f11bd13c'
+          }
+    }
+    fetch("https://api.cognitive.microsoft.com/bingcustomsearch/v7.0/search?q="+term+"&customconfig=d311c875-8de1-4c5d-959d-5c0f9d5d1d98&mkt=en-US",options)
+    .then(response => response.json())
+    .then(data => {
+   
+        dispatch(setBingResoults(data ))
+    });
+};
 
+export const {cleanSearch,setGoogleResoults,setBingResoults,setSearchOptions} = searchSlice.actions
 export const selectResoults = state => state.search.result;
-
-
 export default searchSlice.reducer;
